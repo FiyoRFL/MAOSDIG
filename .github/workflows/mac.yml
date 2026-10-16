@@ -1,0 +1,36 @@
+name: DJ MAOS para Mac
+
+on:
+  workflow_dispatch:          # botón "Run workflow" en la pestaña Actions
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-latest,   name: apple-silicon }   # Mac con chip M1/M2/M3/M4
+          - { os: macos-15-intel, name: intel }           # Mac con chip Intel
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Capturas de la ventana (sin pantalla)
+        run: |
+          pip install PySide6
+          python3 mac_preview.py
+
+      - name: Compilar DJMAOS.app y DJMAOS.dmg
+        run: bash build_mac.sh
+
+      - name: Subir resultados
+        uses: actions/upload-artifact@v4
+        with:
+          name: DJMAOS-${{ matrix.name }}
+          path: |
+            DJMAOS.dmg
+            preview_*.png
